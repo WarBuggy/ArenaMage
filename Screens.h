@@ -3,4 +3,5 @@
 
 #include "ScreenMenu.h"
 #include "ScreenConnectServer.h"
+#include "ScreenSelect.h"
 #endif

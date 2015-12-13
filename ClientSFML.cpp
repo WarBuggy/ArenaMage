@@ -7,6 +7,7 @@ ClientSFML::ClientSFML(std::string pass, std::string name, std::string ip, size_
     State = STATE::Init;
     StopClient = false;
     logStream.clear();
+    TotalArenaObject = 0;
     try
     {
         sf::Socket::Status s = socket_.bind(sf::Socket::AnyPort);
@@ -21,17 +22,17 @@ ClientSFML::ClientSFML(std::string pass, std::string name, std::string ip, size_
         }
         else if (s == sf::Socket::Error)
         {
-            std::cerr << "Error in setup client socket. Client is not started." << std::endl;
+            Log("Error in setup client socket. Client is not started.", true);
         }
         else
         {
-            std::cerr << "Unexpected client socket status when during setting up. Client is not started." << s << std::endl;
+            Log("Unexpected client socket status when during setting up. Client is not started.", true);
         }
     }
     catch (std::exception& e)
     {
-        std::cerr << "Error in setting up client socket: " << std::endl;
-        std::cerr << e.what() << std::endl;
+        Log("Error in setting up client socket: ", true);
+        Log(e.what(), true);
         return;
     }
 }
@@ -41,7 +42,7 @@ void ClientSFML::send(Packet p)
     sf::Socket::Status status = socket_.send(p.p, serverIP, (uint16_t)serverPort);
     if (status == sf::Socket::Error)
     {
-        std::cout << "Error in sending data to server." << std::endl;
+        Log("Error in sending data to server.", true);
     }
     else if (status == sf::Socket::Done)
     {
@@ -60,18 +61,23 @@ void ClientSFML::ProcessReceivedPacket(Packet p)
         p.CreateDataIDOnly(DataID::RequestArenaInfo);
         send(p);
     }
-    else
+    else if (p.ID == DataID::LogInDenyWrongPassword)
     {
-        if (p.ID == DataID::LogInDenyWrongPassword)
-        {
-            out << "Wrong password. Authen failed.";
-        }
-        else if (p.ID == DataID::LogInDenyMaxPlayer)
-        {
-            out << "Server is full. Authen failed.";
-        }
+        out << "Wrong password. Authen failed.";
     }
-    std::cout << out.str() << std::endl;
+    else if (p.ID == DataID::LogInDenyMaxPlayer)
+    {
+        out << "Server is full. Authen failed.";
+    }
+    else if (p.ID == DataID::ArenaObjects)
+    {
+        ProcessArenaPackages(p);
+    }
+    else if (p.ID == DataID::ArenaInfo)
+    {
+        ProcessArenaInfoPackage(p);
+    }
+    Log(out.str());
 }
 
 void ClientSFML::StartAuthen()
@@ -83,10 +89,8 @@ void ClientSFML::StartAuthen()
 
 void ClientSFML::run()
 {
-    size_t received;
     sf::IpAddress sender;
     uint16_t port;
-    uint8_t data[Packet::BUFFER_SIZE];
     StartAuthen();
     while (StopClient == false)
     {
@@ -95,7 +99,7 @@ void ClientSFML::run()
         if (status == sf::Socket::Error)
         {
             // error...
-            std::cout << "Error in receiving from server." << std::endl;
+            Log("Error in receiving from server.", true);
         }
         else if (status == sf::Socket::Done)
         {
@@ -108,8 +112,8 @@ void ClientSFML::run()
             }
             catch (std::exception& e)
             {
-                std::cout << "Error in client handle_receive:" << std::endl;
-                std::cout << e.what() << std::endl;
+                Log("Error in client handle_receive:", true);
+                Log(e.what(), true);
             }
         }
         else
@@ -130,12 +134,12 @@ void ClientSFML::stop()
             Logout();
         }
         socket_.unbind();
-        std::cout << "Client socket unbinds." << std::endl;
+        Log("Client socket unbinds.");
     }
     catch (std::exception& e)
     {
-        std::cerr << "Error in client closing socket:" << std::endl;
-        std::cerr << e.what() << std::endl;
+        Log("Error in client closing socket: ", true);
+        Log(e.what(), true);
     }
 }
 
@@ -144,4 +148,97 @@ void ClientSFML::Logout()
     Packet p;
     p.CreateDataIDOnly(DataID::LogOut);
     send(p);
+}
+
+void ClientSFML::ProcessArenaPackages(Packet p)
+{
+    if (TotalArenaObject == 0)
+    {
+        // client hasnt received arena info yet
+        // re-request arenainfo
+        // might cause some kind of dead-lock here
+        //sf::Packet p;
+        //p << (uint8_t)DataID::RequestArenaInfo;
+        //send(p);
+        return;
+    }
+    uint8_t packageNum = 0, totalPackageNum = 0, objectNum = 0;
+    bool success = p.p >> packageNum >> totalPackageNum >> objectNum;
+    if (!success)
+    {
+        // error
+        Log("Error processing arena package header");
+    }
+    else
+    {
+        // check if packageNum exists
+        size_t count = packageReceived.count(packageNum);
+        if (count == 1)
+        {
+            // this pack is duplicated, do nothing
+            std::stringstream out;
+            out << "Duplicated arena package #" << packageNum << " received.";
+            Log(out.str());
+        }
+        else
+        {
+            std::stringstream out;
+            packageReceived.insert(std::pair<uint8_t, bool>(packageNum, true));
+            for (uint8_t i = 0; i <= objectNum - 1; i++)
+            {
+                Point2D point;
+                uint8_t type;
+                success = p.p >> point.X >> point.Y >> type;
+                if (!success)
+                {
+                    out << "Error processing arena package object #" << (i + packageNum*Arena::OBJECT_SENT_PER_PACKAGE);
+                    Log(out.str());
+                }
+                else
+                {
+                    arena.ArenaObjects.insert(std::pair<Point2D, ObjectType>(point, (ObjectType)type));
+                    if (arena.ArenaObjects.size() == TotalArenaObject)
+                    {
+                        //sf::Packet reply;
+                        //reply << (uint8_t)DataID::ArenaReceivedCompleted;
+                        //send(reply);
+                        // Im an asshole and i dont send reply and shit
+                        Log("All arena objects were received succesfully.");
+                        State = STATE::ArenaInfoCompleted;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ClientSFML::ProcessArenaInfoPackage(Packet p)
+{
+    sf::Uint16 width = 0, height = 0, jumpHeight = 0, totalObject = 0;
+    bool success = p.p >> width >> height >> jumpHeight >> totalObject;
+    if (!success)
+    {
+        // error
+        Log("Error processing arena info package from server");
+    }
+    else
+    {
+        arena = Arena(width, height, jumpHeight);
+        TotalArenaObject = totalObject;
+        arena.ArenaObjects = std::map<Point2D, ObjectType>();
+        packageReceived = std::map<uint8_t, bool>();
+    }
+}
+
+void ClientSFML::Log(std::string message, bool isError)
+{
+    if (!isError)
+    {
+        std::cout << message << std::endl;
+    }
+    else
+    {
+        std::cerr << message << std::endl;
+    }
 }

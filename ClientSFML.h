@@ -4,6 +4,7 @@
 #include <sstream>
 #include "Packet.h"
 #include "Endpoint.h"
+#include "Arena.h"
 
 class ClientSFML
 {
@@ -13,6 +14,14 @@ public:
     void run();
     static bool StopClient;
     std::stringstream logStream;
+    enum STATE : uint8_t
+    {
+        Init = 0,
+        AuthenCompleted = 10,
+        ArenaInfoCompleted = 11
+    };
+    STATE State;
+    Arena arena;
 private:
     void send(Packet p);
     void ProcessReceivedPacket(Packet p);
@@ -22,14 +31,11 @@ private:
     std::string Pass, Name;
     sf::IpAddress serverIP;
     size_t serverPort;
-    Arena arena;
     void Logout();
-    enum STATE : uint8_t
-    {
-        Init = 0,
-        AuthenCompleted = 10,
-        ArenaInfoCompleted = 11
-    };
-    STATE State;
+    void ProcessArenaPackages(Packet p);
+    void ProcessArenaInfoPackage(Packet p);
+    size_t TotalArenaObject;
+    std::map<uint8_t, bool> packageReceived;
+    void Log(std::string message, bool isError = false);
 };
 #endif

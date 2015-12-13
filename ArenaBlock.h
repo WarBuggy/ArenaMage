@@ -1,6 +1,5 @@
 #ifndef ARENABLOCK_H
 #define ARENABLOCK_H
-
 #include "ArenaObject.h"
 
 class ArenaBlock : public ArenaObject
@@ -22,8 +21,14 @@ private:
     {
         width = 1;
         height = 2;
+        IsHeightScalable = false;
+        IsStandable = true;
+        IsPassable = false;
+        if (!texture.create(width*SCALE, height))
+        {
+            sprite.setColor(sf::Color(160, 82, 45));
+            sprite.setTexture(texture);
+        }
     }
-  
 };
-
 #endif

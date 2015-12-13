@@ -12,6 +12,8 @@ enum DataID : uint8_t {
     LogInDenyWrongPacketFormat,
     LogOut,
     RequestArenaInfo,
-    ArenaObjects
+    ArenaObjects,
+    ArenaInfo,
+    ArenaReceivedCompleted
 };
 #endif

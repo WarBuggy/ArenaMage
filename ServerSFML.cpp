@@ -15,18 +15,16 @@ ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint3
         Password.assign(pass);
         MaxServerCapacity = serverCap;
         MaxTeamCapacity = teamCap;
-        arena.SetWidth(160);
-        arena.SetHeight(80);
-        arena.SetJumpHeight(20);
+        arena = Arena(160, 80, 20);
         arena.SetupArenaObjects();
     }
     else if (s == sf::Socket::Error)
     {
-        std::cout << "Error in setup server socket. Server is not started." << std::endl;
+        Log("Error in setup server socket. Server is not started.");
     }
     else
     {
-        std::cout << "Unexpected server socket status when during setting up. Server is not started." << s << std::endl;
+        Log("Unexpected server socket status when during setting up. Server is not started.");
     }
 }
 
@@ -38,7 +36,7 @@ void ServerSFML::run()
     }
     sf::IpAddress sender;
     uint16_t port;
-    std::cout << "Server listens for request..." << std::endl;
+    Log("Server listens for request...");
     while (StopServer == false)
     {
         sf::Packet receivedPacket;
@@ -46,7 +44,7 @@ void ServerSFML::run()
         if (status == sf::Socket::Error)
         {
             // error...
-            std::cout << "Error in receiving from client." << std::endl;
+            Log("Error in receiving from client.");
         }
         else if (status == sf::Socket::Done)
         {
@@ -60,8 +58,8 @@ void ServerSFML::run()
             }
             catch (std::exception& e)
             {
-                std::cout << "Error in server handle_receive:" << std::endl;
-                std::cout << e.what() << std::endl;
+                Log("Error in server handle_receive:", true);
+                Log(e.what(), true);
             }
         }
         else
@@ -78,20 +76,20 @@ void ServerSFML::stop()
     try
     {
         socket_.unbind();
-        std::cout << "Server socket unbinds." << std::endl;
+        Log("Serve socket unbinds.");
     }
     catch (std::exception& e)
     {
-        std::cerr << "Error in server closing socket:" << std::endl;
-        std::cerr << e.what() << std::endl;
+        Log("Error in server closing socket:", true);
+        Log(e.what(), true);
     }
 }
 
-void ServerSFML::send(Packet p, Endpoint ep)
+void ServerSFML::send(sf::Packet p, Endpoint ep)
 {
     try
     {
-        sf::Socket::Status status = socket_.send(p.p, ep.IPAddress, (uint16_t)ep.Port); // &data[0] "convert" vector to array
+        sf::Socket::Status status = socket_.send(p, ep.IPAddress, (uint16_t)ep.Port); // &data[0] "convert" vector to array
         if (status == sf::Socket::Status::Done)
         {
             // data sent successfully
@@ -107,8 +105,10 @@ void ServerSFML::send(Packet p, Endpoint ep)
     }
     catch (std::exception& e)
     {
-        std::cerr << "Error in server sending data to client " << ep.IPAddress.toString() << "," << ep.Port << ":";
-        std::cerr << e.what() << std::endl;
+        std::stringstream out;
+        out << "Error in server sending data to client " << ep.IPAddress.toString() << "," << ep.Port << ":";
+        Log(out.str());
+        Log(e.what(), true);
     }
 }
 
@@ -136,8 +136,10 @@ void ServerSFML::ProcessLogOutPacket(Packet p, Endpoint remoteEndpoint)
         if ((*it) == remoteEndpoint)
         {
             CurrentPlayers.erase(it);
-            std::cout << "A player logged out. ";
-            std::cout << "Number of available spot(s): " << (MaxServerCapacity - CurrentPlayers.size()) << "." << std::endl;
+            std::stringstream out;
+            out << "A player logged out.";
+            out << "Number of available spot(s): " << (MaxServerCapacity - CurrentPlayers.size()) << "." << std::endl;
+            Log(out.str());
             return;
         }
     }
@@ -185,12 +187,67 @@ void ServerSFML::ProcessLogInPacket(Packet p, Endpoint remoteEndpoint)
             out << "Invalid password from client " << remoteEndpoint.IPAddress.toString() << ", " << remoteEndpoint.Port << ".";
         }
     }
-    std::cout << out.str() << std::endl;
-    send(reply, remoteEndpoint);
-    std::cout << "Number of available spot(s): " << (MaxServerCapacity - CurrentPlayers.size()) << "." << std::endl;
+    Log(out.str());
+    send(reply.p, remoteEndpoint);
+    out = std::stringstream();
+    out << "Number of available spot(s): " << (MaxServerCapacity - CurrentPlayers.size()) << "." << std::endl;
+    Log(out.str());
 }
 
 void ServerSFML::ProcessRequestArena(Endpoint ep)
 {
-    size_t objectNum = arena.ArenaObjects.size();
+    size_t objectTotal = arena.ArenaObjects.size();
+    uint8_t totalPackageNeeded = (uint8_t)((objectTotal / Arena::OBJECT_SENT_PER_PACKAGE));
+    if (objectTotal % Arena::OBJECT_SENT_PER_PACKAGE != 0)
+    {
+        totalPackageNeeded++;
+    }
+    uint8_t packageNum = 1, objectNum = 0;
+    sf::Packet p;
+    p << (uint8_t)DataID::ArenaInfo << (sf::Uint16)arena.PlayableWidth << (sf::Uint16)arena.PlayableHeight << (sf::Uint16)arena.JumpHeight << (sf::Uint16)objectTotal;
+    send(p, ep);
+    for (std::map<Point2D, ObjectType>::iterator it = arena.ArenaObjects.begin(); it != arena.ArenaObjects.end(); ++it)
+    {
+        if (objectNum == 0)
+        {
+            p = sf::Packet();
+            // Format
+            // DataID + packageNum + total package num + object num + point1.X + point1.Y + type + point2.X + point2.Y + type + ......
+            p << (uint8_t)DataID::ArenaObjects << packageNum << totalPackageNeeded;
+            if (packageNum == totalPackageNeeded)
+            {
+                p << (uint8_t)(objectTotal - (packageNum*Arena::OBJECT_SENT_PER_PACKAGE));
+            }
+            else
+            {
+                p << Arena::OBJECT_SENT_PER_PACKAGE;
+            }
+        }
+
+        p << it->first.X << it->first.Y << (uint8_t)it->second;
+
+        objectNum++;
+        if (objectNum == Arena::OBJECT_SENT_PER_PACKAGE)
+        {
+            objectNum = 0;
+            packageNum++;
+            send(p, ep);
+        }
+    }
+    if (p.getDataSize() > 4) // dataid + packageNum + totalpackge + object num
+    {
+        send(p, ep);
+    }
+}
+
+void ServerSFML::Log(std::string message, bool isError)
+{
+    if (!isError)
+    {
+        std::cout << message << std::endl;
+    }
+    else
+    {
+        std::cerr << message << std::endl;
+    }
 }

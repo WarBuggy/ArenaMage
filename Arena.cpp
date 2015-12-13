@@ -1,4 +1,5 @@
 #include "Arena.h"
+extern std::mt19937 rng;
 
 Arena::Arena()
 {
@@ -13,19 +14,18 @@ Arena::Arena(size_t playableWidth, size_t playableHeight, size_t jumpHeight)
 
 void Arena::SetupArenaObjects()
 {
-    std::mt19937 mt;
-    std::uniform_int_distribution<size_t> chanceDist(0, 100);
     size_t rows = PlayableHeight / JumpHeight;
     ArenaObjects.clear();
     for (size_t i = 1; i < rows; i++)
     {
         for (size_t j = 0; j < PlayableWidth; j++)
         {
-            size_t chance = chanceDist(mt);
+            std::uniform_int_distribution<int> uni(0, 100);
+            size_t chance = uni(rng);
             if (chance <= ArenaBlock::Chance)
             {
-                std::uniform_int_distribution<size_t> blockNumDist(ArenaBlock::MinBlockNum, ArenaBlock::MaxBlockNum);
-                size_t repeat = blockNumDist(mt);
+                std::uniform_int_distribution<int> repeatRNG(ArenaBlock::MinBlockNum, ArenaBlock::MinBlockNum);
+                size_t repeat = repeatRNG(rng);
                 size_t k;
                 for (k = j; (k < j + repeat) && (k < PlayableWidth); k++)
                 {
@@ -36,8 +36,8 @@ void Arena::SetupArenaObjects()
             }
             else
             {
-                std::uniform_int_distribution<size_t> blockNumDist(ArenaPlatform::MinBlockNum, ArenaPlatform::MaxBlockNum);
-                size_t repeat = blockNumDist(mt);
+                std::uniform_int_distribution<int> repeatRNG(ArenaPlatform::MinBlockNum, ArenaPlatform::MinBlockNum);
+                size_t repeat = repeatRNG(rng);
                 size_t k;
                 for (k = j; (k < j + repeat) && (k < PlayableWidth); k++)
                 {
@@ -48,21 +48,6 @@ void Arena::SetupArenaObjects()
             }
         }
     }
-}
-
-void Arena::SetWidth(size_t width)
-{
-    PlayableWidth = width;
-}
-
-void Arena::SetHeight(size_t height)
-{
-    PlayableHeight = height;
-}
-
-void Arena::SetJumpHeight(size_t jumpHeight)
-{
-    JumpHeight = jumpHeight;
 }
 
 /*

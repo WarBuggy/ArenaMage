@@ -4,7 +4,9 @@
 enum ScreenCode {
     Exit = -1,
     ScreenMenuCode,
-    ConnectServerCode
+    ConnectServerCode,
+    SelectCode,
+    PlayCode
 };
 
 #endif

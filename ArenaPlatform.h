@@ -22,6 +22,9 @@ private:
     {
         width = 1;
         height = 2;
+        IsHeightScalable = false;
+        IsStandable = true;
+        IsPassable = true;
     }
 };
 

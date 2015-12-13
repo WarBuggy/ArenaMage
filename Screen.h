@@ -14,10 +14,11 @@ public:
     Screen(sf::RenderWindow & window);
     ScreenCode Run(sf::RenderWindow & window);
     virtual void SetupChoices() {};
-    virtual void DrawScreen(sf::RenderWindow & window) {};
-    virtual void HandleEvent(sf::Event & aEvent) {};
+    virtual void DrawScreen(sf::RenderWindow & window) {}
+    virtual void HandleEvent(sf::Event & aEvent) {}
     virtual void HandleOnScreenChoice(Choice c) {}
     virtual void HandleChoice(Choice c) {}
+    virtual void HandleClient() {}
 
     ScreenCode CurrentScreenScreenCode;
     bool operator ==(const Screen &obj) const

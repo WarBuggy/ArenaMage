@@ -3,6 +3,7 @@
 
 #include "ScreenResolution.h"
 #include "Screens.h"
+#include "Object.h"
 
 class ArenaMage
 {

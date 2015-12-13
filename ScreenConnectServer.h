@@ -12,6 +12,7 @@ public:
     void HandleEvent(sf::Event & aEvent);
     void HandleOnScreenChoice(Choice c);
     void HandleChoice(Choice c);
+    void HandleClient();
 private:
     Choice BackToMainMenu;
 };

@@ -5,6 +5,7 @@
 #include <sstream>
 #include "Packet.h"
 #include "Endpoint.h"
+#include "Arena.h"
 
 class ServerSFML
 {
@@ -17,7 +18,7 @@ public:
     void stop();
 private:
     bool IsServerOnline = false;
-    void send(Packet p, Endpoint remoteEndpoint);
+    void send(sf::Packet p, Endpoint remoteEndpoint);
     void ProcessReceivedPacket(Packet p, Endpoint remoteEndpoint);
     void ProcessLogOutPacket(Packet p, Endpoint remoteEndpoint);
     void ProcessLogInPacket(Packet p, Endpoint remoteEndpoint);
@@ -26,6 +27,7 @@ private:
     size_t MaxServerCapacity, MaxTeamCapacity;
     std::vector<Endpoint> CurrentPlayers;
     Arena arena;
+    void Log(std::string message, bool isError = false);
 };
 #endif
 

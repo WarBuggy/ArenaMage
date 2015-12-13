@@ -2,6 +2,10 @@
 
 std::vector<ScreenResolution> ArenaMage::SupportedScreenResolutions(2);
 sf::Font Choice::DEFAULT_FONT;
+size_t Object::SCALE;
+
+std::random_device rd;     // only used once to initialise (seed) engine
+std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
 
 void SetupSupportedScreenResolution()
 {
@@ -40,6 +44,11 @@ ScreenCode HandleScreenCode(ScreenCode code, sf::RenderWindow & window)
         ScreenConnectServer screen(window);
         return screen.Run(window);
     }
+    else if (code == ScreenCode::SelectCode)
+    {
+        ScreenSelect screen(window);
+        return screen.Run(window);
+    }
     else
     {
         return ScreenCode::Exit;
@@ -48,6 +57,7 @@ ScreenCode HandleScreenCode(ScreenCode code, sf::RenderWindow & window)
 
 void StartGame()
 {
+    Object::SCALE = 5;
     //std::map<ScreenCode, Screen*> Screens;
     ScreenCode screencode = ScreenCode::ScreenMenuCode;
     init();
@@ -62,6 +72,7 @@ void StartGame()
 
 int main()
 {
+    srand((size_t)time(0));
     try
     {
         StartGame();

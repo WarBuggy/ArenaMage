@@ -37,3 +37,11 @@ void ScreenConnectServer::HandleChoice(Choice c)
         ResultScreenCode = ScreenCode::ScreenMenuCode;
     }
 }
+
+void ScreenConnectServer::HandleClient()
+{
+    if (localClient.State == ClientSFML::STATE::ArenaInfoCompleted)
+    {
+        ResultScreenCode = ScreenCode::SelectCode;
+    }
+}

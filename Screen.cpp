@@ -19,6 +19,8 @@ ScreenCode Screen::Run(sf::RenderWindow & window)
             // Window closed
             if (Event.type == sf::Event::Closed)
             {
+                ServerSFML::StopServer = true;
+                ClientSFML::StopClient = true;
                 return (ScreenCode::Exit);
             }
             sf::Vector2f mousePos((float)sf::Mouse::getPosition(window).x, (float)sf::Mouse::getPosition(window).y);
@@ -81,6 +83,8 @@ ScreenCode Screen::Run(sf::RenderWindow & window)
             boost::thread(boost::bind(&ClientSFML::run, boost::ref(localClient)));
             Command = ServerClientCommand::Nothing;
         }
+
+        HandleClient();
 
         if (ResultScreenCode != CurrentScreenScreenCode)
         {
