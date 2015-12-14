@@ -2,9 +2,10 @@
 #define ARENA_H
 
 #include "Point2D.h"
-#include <map>
 #include "ArenaObjects.h"
+#include "ObjectType.h"
 #include <random>
+#include <map>
 
 class Arena
 {

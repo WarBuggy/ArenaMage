@@ -3,9 +3,12 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <boost/make_shared.hpp>
 #include "Packet.h"
 #include "Endpoint.h"
 #include "Arena.h"
+#include "Team.h"
+#include "BossUFO.h"
 
 class ServerSFML
 {
@@ -28,6 +31,10 @@ private:
     std::vector<Endpoint> CurrentPlayers;
     Arena arena;
     void Log(std::string message, bool isError = false);
+    Team teamA, teamB;
+    size_t playableWidth, playableHeight, jumpHeight;
+    void doGameUpdate();
+    void sendDataToClients();
 };
 #endif
 

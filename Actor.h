@@ -2,25 +2,18 @@
 #define ACTOR_H
 
 
-class Actor
+class Actor 
 {
 public:
-    enum Type
-    {
-        Player,
-        Spectator,
-        Boss
-    };
-    Type GetType()
-    {
-        return type;
-    }
-    void SetType(Type t)
-    {
-        type = t;
-    }
+    //enum Type
+    //{
+    //    Player,
+    //    Spectator,
+    //    Boss
+    //};
+    //Type type;
 protected:
-    Type type;
+
 };
 
 #endif

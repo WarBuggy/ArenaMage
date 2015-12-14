@@ -5,6 +5,11 @@ bool ServerSFML::StopServer;
 ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint32_t port)
 {
     IsServerOnline = false;
+    teamA = Team("Team A");
+    teamB = Team("Team B");
+    playableWidth = 160;
+    playableHeight = 80;
+    jumpHeight = 20;
     sf::Socket::Status s = socket_.bind(port);
 
     if (s == sf::Socket::Done)
@@ -15,8 +20,13 @@ ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint3
         Password.assign(pass);
         MaxServerCapacity = serverCap;
         MaxTeamCapacity = teamCap;
-        arena = Arena(160, 80, 20);
+        arena = Arena(playableWidth, playableHeight, jumpHeight);
         arena.SetupArenaObjects();
+        BossUFO bossUFO(playableWidth, playableHeight);
+        teamA.Members.push_back(boost::make_shared<BossUFO>(playableWidth, playableHeight));
+
+
+        //v.push_back(boost::make_shared<B>());
     }
     else if (s == sf::Socket::Error)
     {
@@ -39,6 +49,10 @@ void ServerSFML::run()
     Log("Server listens for request...");
     while (StopServer == false)
     {
+        doGameUpdate();
+
+        sendDataToClients();
+
         sf::Packet receivedPacket;
         sf::Socket::Status status = socket_.receive(receivedPacket, sender, port);
         if (status == sf::Socket::Error)
@@ -250,4 +264,14 @@ void ServerSFML::Log(std::string message, bool isError)
     {
         std::cerr << message << std::endl;
     }
+}
+
+void ServerSFML::doGameUpdate()
+{
+    teamA.Members.at(0)->move();
+    //std::cout << teamA.Members.at(0)->Pos.X << ", ";
+}
+
+void ServerSFML::sendDataToClients()
+{
 }

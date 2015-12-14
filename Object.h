@@ -2,11 +2,11 @@
 #define OBJECT_H
 
 #include "Point2D.h"
-#include "ObjectType.h"
 
 class Object
 {
 public:
+    Object() {}
     Object(float x, float y)
     {
         Pos.X = x;
