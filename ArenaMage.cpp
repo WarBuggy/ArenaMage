@@ -6,6 +6,7 @@ size_t Object::SCALE;
 
 std::random_device rd;     // only used once to initialise (seed) engine
 std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+std::mutex mutex;
 
 void SetupSupportedScreenResolution()
 {

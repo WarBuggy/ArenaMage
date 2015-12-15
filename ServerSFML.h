@@ -1,13 +1,15 @@
 #ifndef SERVERSFML_H
 #define SERVERSFML_H
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <mutex>
 #include <boost/make_shared.hpp>
 #include "Packet.h"
 #include "Endpoint.h"
 #include "Arena.h"
 #include "Team.h"
+#include "ActorID.h"
+#include "ActorType.h"
 #include "BossUFO.h"
 
 class ServerSFML
@@ -28,13 +30,14 @@ private:
     void ProcessRequestArena(Endpoint ep);
     std::string Password;
     size_t MaxServerCapacity, MaxTeamCapacity;
-    std::vector<Endpoint> CurrentPlayers;
+    std::map<Endpoint, ActorType> CurrentPlayers;
     Arena arena;
     void Log(std::string message, bool isError = false);
     Team teamA, teamB;
     size_t playableWidth, playableHeight, jumpHeight;
-    void doGameUpdate();
+    void doGameUpdate(sf::Uint32 elapsed);
     void sendDataToClients();
+    static const size_t FramePerSecond = 30;
 };
 #endif
 

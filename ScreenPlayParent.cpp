@@ -15,6 +15,7 @@ void ScreenPlayParent::DrawScreen(sf::RenderWindow & window)
 {
     DrawBounds();
     DrawArena();
+    localClient.DrawActors(window, unplayableWidth / 2, unplayableHeight / 2);
 }
 
 void ScreenPlayParent::DrawBounds()

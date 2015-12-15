@@ -3,25 +3,18 @@
 
 #include <boost/shared_ptr.hpp>
 #include "Weapon.h"
-#include "Object.h"
+#include "Actor.h"
 class Team;
-class Boss :public Object
+class Boss :public Actor
 {
 public:
-    Boss(float x, float y) : Object(x, y) {}
-    Boss(Point2D p) : Object(p) {}
+    Boss(float x, float y) : Actor(x, y) {}
+    Boss(Point2D p) : Actor(p) {}
     Boss() {}
-    void setSize(size_t w, size_t h)
-    {
-        width = w;
-        height = h;
-    }
     Boss(size_t w, size_t h) 
     {
         SetPlayableArea(w, h);
     }
-    size_t MaxHealth;
-    size_t CurrentHealth;
     bool IsAlive = true;
     double DamageCooldown = 500; // ms
     double CurrentDamageCooldown;
@@ -38,7 +31,7 @@ public:
         CurrentDamageCooldown = CurrentDamageCooldown + elapsedGameTime;
     }
 
-    virtual void move() = 0;
+    virtual void move(sf::Uint32 elapsed) = 0;
     virtual void attack() = 0;
     virtual void getDamage(size_t damage) = 0;
 

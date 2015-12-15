@@ -1,6 +1,7 @@
 #include "ClientSFML.h"
 sf::UdpSocket ClientSFML::socket_;
 bool ClientSFML::StopClient;
+extern std::mutex mutex;
 
 ClientSFML::ClientSFML(std::string pass, std::string name, std::string ip, size_t server_port)
 {
@@ -8,6 +9,7 @@ ClientSFML::ClientSFML(std::string pass, std::string name, std::string ip, size_
     StopClient = false;
     logStream.clear();
     TotalArenaObject = 0;
+
     try
     {
         sf::Socket::Status s = socket_.bind(sf::Socket::AnyPort);
@@ -55,7 +57,8 @@ void ClientSFML::ProcessReceivedPacket(Packet p)
     std::stringstream out;
     if (p.ID == DataID::LogInServerAccept)
     {
-        out << "Authen complete";
+        out << "Authen complete.";
+        Log(out.str());
         State = STATE::AuthenCompleted;
         Packet p;
         p.CreateDataIDOnly(DataID::RequestArenaInfo);
@@ -64,10 +67,12 @@ void ClientSFML::ProcessReceivedPacket(Packet p)
     else if (p.ID == DataID::LogInDenyWrongPassword)
     {
         out << "Wrong password. Authen failed.";
+        Log(out.str());
     }
     else if (p.ID == DataID::LogInDenyMaxPlayer)
     {
         out << "Server is full. Authen failed.";
+        Log(out.str());
     }
     else if (p.ID == DataID::ArenaObjects)
     {
@@ -77,7 +82,10 @@ void ClientSFML::ProcessReceivedPacket(Packet p)
     {
         ProcessArenaInfoPackage(p);
     }
-    Log(out.str());
+    else if (p.ID == DataID::ActorInfo)
+    {
+        ProcessActorInfoPacket(p);
+    }
 }
 
 void ClientSFML::StartAuthen()
@@ -199,10 +207,10 @@ void ClientSFML::ProcessArenaPackages(Packet p)
                     arena.ArenaObjects.insert(std::pair<Point2D, ObjectType>(point, (ObjectType)type));
                     if (arena.ArenaObjects.size() == TotalArenaObject)
                     {
-                        //sf::Packet reply;
-                        //reply << (uint8_t)DataID::ArenaReceivedCompleted;
-                        //send(reply);
-                        // Im an asshole and i dont send reply and shit
+                        sf::Packet reply;
+                        reply << (uint8_t)DataID::ArenaReceivedCompleted;
+                        send(reply);
+
                         Log("All arena objects were received succesfully.");
                         State = STATE::ArenaInfoCompleted;
                         return;
@@ -233,6 +241,7 @@ void ClientSFML::ProcessArenaInfoPackage(Packet p)
 
 void ClientSFML::Log(std::string message, bool isError)
 {
+    std::unique_lock<std::mutex> lock(mutex);
     if (!isError)
     {
         std::cout << message << std::endl;
@@ -241,4 +250,45 @@ void ClientSFML::Log(std::string message, bool isError)
     {
         std::cerr << message << std::endl;
     }
+    lock.unlock();
+}
+
+void ClientSFML::ProcessActorInfoPacket(Packet p)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    sf::Uint8 actorNum = 0;
+    p.p >> actorNum;
+    Actors.clear();
+    for (sf::Uint8 i = 0; i < actorNum; i++)
+    {
+        sf::Uint8 actorID = 0;
+        sf::Uint16 w = 0, h = 0;
+        float x = 0, y = 0;
+        bool success = p.p >> actorID >> w >> h >> x >> y;
+        if (success)
+        {
+            Actor a(x, y);
+            a.setSize(w, h);
+            a.id = (ActorID)actorID;
+            Actors.push_back(a);
+        }
+    }
+    lock.unlock();
+}
+
+void ClientSFML::DrawActors(sf::RenderWindow & window, float offsetX, float offsetY)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    for (std::vector<Actor>::iterator it = Actors.begin(); it != Actors.end(); ++it)
+    {
+        sf::RectangleShape rec;
+        rec.setSize(sf::Vector2f((float)it->width*it->SCALE, (float)it->height*it->SCALE));
+        rec.setPosition(it->Pos.X + offsetX, it->Pos.Y + offsetY);
+        if (it->id == (sf::Uint8)  ActorID::BOSS_UFO)
+        {
+            rec.setFillColor(sf::Color(50, 205, 50));
+        }
+        window.draw(rec);
+    }
+    lock.unlock();
 }

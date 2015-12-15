@@ -2,6 +2,9 @@
 #define CLIENTSFML_H
 #include <iostream>
 #include <sstream>
+#include <mutex>
+#include "SFML/Graphics.hpp"
+#include "Actor.h"
 #include "Packet.h"
 #include "Endpoint.h"
 #include "Arena.h"
@@ -22,6 +25,7 @@ public:
     };
     STATE State;
     Arena arena;
+    void DrawActors(sf::RenderWindow & window, float offsetX, float offsetY);
 private:
     void send(Packet p);
     void ProcessReceivedPacket(Packet p);
@@ -37,5 +41,7 @@ private:
     size_t TotalArenaObject;
     std::map<uint8_t, bool> packageReceived;
     void Log(std::string message, bool isError = false);
+    void ProcessActorInfoPacket(Packet p);
+    std::vector<Actor> Actors;
 };
 #endif

@@ -14,6 +14,7 @@ enum DataID : uint8_t {
     RequestArenaInfo,
     ArenaObjects,
     ArenaInfo,
-    ArenaReceivedCompleted
+    ArenaReceivedCompleted,
+    ActorInfo
 };
 #endif

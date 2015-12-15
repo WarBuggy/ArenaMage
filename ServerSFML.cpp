@@ -1,6 +1,7 @@
 #include "ServerSFML.h"
 sf::UdpSocket ServerSFML::socket_;
 bool ServerSFML::StopServer;
+extern std::mutex mutex;
 
 ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint32_t port)
 {
@@ -24,9 +25,6 @@ ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint3
         arena.SetupArenaObjects();
         BossUFO bossUFO(playableWidth, playableHeight);
         teamA.Members.push_back(boost::make_shared<BossUFO>(playableWidth, playableHeight));
-
-
-        //v.push_back(boost::make_shared<B>());
     }
     else if (s == sf::Socket::Error)
     {
@@ -49,7 +47,9 @@ void ServerSFML::run()
     Log("Server listens for request...");
     while (StopServer == false)
     {
-        doGameUpdate();
+        //sf::Time elapsed = clock.restart();
+        //doGameUpdate(elapsed.asMilliseconds());
+        doGameUpdate(33);
 
         sendDataToClients();
 
@@ -80,6 +80,7 @@ void ServerSFML::run()
         {
             //std::cout << "Socket status: " << status << std::endl;
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / FramePerSecond));
     }
     // exit loop means server is stopped
     stop();
@@ -141,13 +142,17 @@ void ServerSFML::ProcessReceivedPacket(Packet p, Endpoint ep)
     {
         ProcessRequestArena(ep);
     }
+    else if (id == DataID::ArenaReceivedCompleted)
+    {
+        CurrentPlayers[ep] = ActorType::SPECTATOR;
+    }
 }
 
 void ServerSFML::ProcessLogOutPacket(Packet p, Endpoint remoteEndpoint)
 {
-    for (std::vector<Endpoint>::iterator it = CurrentPlayers.begin(); it != CurrentPlayers.end(); ++it)
+    for (std::map<Endpoint, ActorType>::iterator it = CurrentPlayers.begin(); it != CurrentPlayers.end(); ++it)
     {
-        if ((*it) == remoteEndpoint)
+        if ((it->first) == remoteEndpoint)
         {
             CurrentPlayers.erase(it);
             std::stringstream out;
@@ -178,14 +183,10 @@ void ServerSFML::ProcessLogInPacket(Packet p, Endpoint remoteEndpoint)
 
             if (CurrentPlayers.size() < MaxServerCapacity)
             {
-                CurrentPlayers.insert(CurrentPlayers.begin(), remoteEndpoint);
+                CurrentPlayers.insert(std::pair<Endpoint, ActorType>(remoteEndpoint, ActorType::UNKNOWN));
                 reply.CreateDataIDOnly(DataID::LogInServerAccept);
 
                 //size_t nameLength = data[1 + passwordLength];
-                //if (nameLength > 0)
-                //{
-                //    name.assign(data.begin() + 1 + passwordLength + 1, data.begin() + 1 + passwordLength + 1 + nameLength);
-                //}
                 out << " " << name << " took an empty spot.";
             }
             else
@@ -204,7 +205,7 @@ void ServerSFML::ProcessLogInPacket(Packet p, Endpoint remoteEndpoint)
     Log(out.str());
     send(reply.p, remoteEndpoint);
     out = std::stringstream();
-    out << "Number of available spot(s): " << (MaxServerCapacity - CurrentPlayers.size()) << "." << std::endl;
+    out << "Number of available spot(s): " << (MaxServerCapacity - CurrentPlayers.size()) << ".";
     Log(out.str());
 }
 
@@ -256,6 +257,7 @@ void ServerSFML::ProcessRequestArena(Endpoint ep)
 
 void ServerSFML::Log(std::string message, bool isError)
 {
+    std::unique_lock<std::mutex> lock(mutex);
     if (!isError)
     {
         std::cout << message << std::endl;
@@ -264,14 +266,27 @@ void ServerSFML::Log(std::string message, bool isError)
     {
         std::cerr << message << std::endl;
     }
+    lock.unlock();
 }
 
-void ServerSFML::doGameUpdate()
+void ServerSFML::doGameUpdate(sf::Uint32 elapsed)
 {
-    teamA.Members.at(0)->move();
-    //std::cout << teamA.Members.at(0)->Pos.X << ", ";
+    teamA.Members.at(0)->move(elapsed);
 }
 
 void ServerSFML::sendDataToClients()
 {
+    sf::Packet p;
+    p << (sf::Uint8)DataID::ActorInfo;
+    p << (sf::Uint8) 1;
+    p << (sf::Uint8) ActorID::BOSS_UFO;
+    p << (sf::Uint16) teamA.Members.at(0)->width << (sf::Uint16) teamA.Members.at(0)->height;
+    p << (float)teamA.Members.at(0)->Pos.X << (float)teamA.Members.at(0)->Pos.Y;
+    for (std::map<Endpoint, ActorType>::iterator it = CurrentPlayers.begin(); it != CurrentPlayers.end(); ++it)
+    {
+        if (it->second != ActorType::UNKNOWN)
+        {
+            send(p, it->first);
+        }
+    }
 }

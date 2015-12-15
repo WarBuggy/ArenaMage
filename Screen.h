@@ -5,7 +5,6 @@
 #include "ClientSFML.h"
 #include "ServerSFML.h"
 #include <iostream>
-#include <SFML/Graphics.hpp>
 #include <boost/thread.hpp>
 
 class Screen
