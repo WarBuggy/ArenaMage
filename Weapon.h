@@ -2,7 +2,8 @@
 #define WEAPON_H
 
 #include <string>
-#include "Projectile.h"
+#include "Projectiles.h"
+
 class Team;
 class Weapon
 {
@@ -14,8 +15,6 @@ public:
     double CurrentCooldown;
     bool IsTesting = false;
     Team *team;
-protected:
-    virtual void FireProjectile(float startX, float startY, float desX, float desY) = 0;
     void Fire(float startX, float startY, float desX, float desY)
     {
         if (CurrentCooldown >= Cooldown)
@@ -27,6 +26,8 @@ protected:
     {
         CurrentCooldown = 0;
     }
+protected:
+    virtual void FireProjectile(float startX, float startY, float desX, float desY) = 0;
 };
 
 

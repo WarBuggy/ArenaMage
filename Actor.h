@@ -3,6 +3,8 @@
 
 #include "Object.h"
 #include "ActorID.h"
+
+class Team;
 // used for drawing
 class Actor : public Object 
 {
@@ -18,6 +20,7 @@ public:
     }
     size_t MaxHealth;
     size_t CurrentHealth;
+    Team* team;
 };
 
 #endif

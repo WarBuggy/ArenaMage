@@ -23,8 +23,12 @@ ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint3
         MaxTeamCapacity = teamCap;
         arena = Arena(playableWidth, playableHeight, jumpHeight);
         arena.SetupArenaObjects();
+
+        // Testing, will be changed
         BossUFO bossUFO(playableWidth, playableHeight);
+        bossUFO.team = &teamB;
         teamA.Members.push_back(boost::make_shared<BossUFO>(playableWidth, playableHeight));
+        //
     }
     else if (s == sf::Socket::Error)
     {

@@ -1,8 +1,6 @@
 #ifndef BOSSUFO_H
 #define BOSSUFO_H
 
-#include <algorithm>
-
 class BossUFO : public Boss
 {
 public:
@@ -14,6 +12,7 @@ public:
         height = 15;
         width = 35;
         Speed = (float)0.2;
+        setupWeapons();
     }
 
     void move(sf::Uint32 elapsed)
@@ -27,39 +26,24 @@ public:
         Pos.X = Pos.X + Speed*elapsed;
     }
 
-    void attack() {}
-    void getDamage(size_t damage) {};
+    void attack()
+    {
+        if (!IsAlive) { return; }
+        for (std::vector<boost::shared_ptr<Weapon>>::size_type i = 0; i != Weapons.size(); i++)
+        {
+            Weapons.at(i)->Fire((Pos.X + width / 3 * i)*SCALE, (Pos.Y + height / 2)*SCALE, 200, 200);
+        }
+    }
 
-    //public override void SetupWeapons()
-    //{
-    //    Weapons.Add(new WeaponBlaster());
-    //    Weapons.Add(new WeaponBlaster());
-    //    Weapons.Add(new WeaponBlaster());
-    //    // Testing
-    //    Weapons[0].CurrentCooldown = 100;
-    //    Weapons[2].CurrentCooldown = 200;
-    //    Weapons[1].CurrentCooldown = 50;
-    //}
-
-    //public override void Attack(Player player)
-    //{
-    //    if (!player.IsAlive) { return; }
-    //    for (int i = 0; i < Weapons.Count; i++)
-    //    {
-    //        Weapons[i].Fire(PosX + (Width / 3 * i), PosY + (Height / 2), player.PosX, player.PosY + (player.CurrentHeight / 2), false);
-    //    }
-    //}
-
-    //public override void GetDamage(int damage)
-    //{
-    //    if (CurrentDamageCooldown >= DamageCooldown)
-    //    {
-    //        CurrentHealth = Math.Max(CurrentHealth - damage, 0);
-    //        CurrentDamageCooldown = 0;
-    //    }
-    //}
-
-
+    void setupWeapons()
+    {
+        Weapons.clear();
+        Weapons.push_back(boost::make_shared<WeaponBlaster>(100));
+        Weapons.push_back(boost::make_shared<WeaponBlaster>(150));
+        Weapons.push_back(boost::make_shared<WeaponBlaster>(200));
+    }
+    
+    void actionWhenGetDamaged(size_t damage) {};
 };
 
 

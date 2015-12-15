@@ -10,10 +10,14 @@ public:
     {
         Color = sf::Color(255, 0, 0);
     }
+    ProjectileBlaster(float x, float y) : Projectile(x, y)
+    {
+        ProjectileBlaster();
+    }
 
-
-
-
+    void Move() {}
+    void DetectCollisionWithArenaObject(Arena arena) {}
+    void DetectCollisionWitObject(Object object) {}
 };
 
 

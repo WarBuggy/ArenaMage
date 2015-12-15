@@ -1,17 +1,18 @@
 #ifndef BOSS_H
 #define BOSS_H
 
+#include <algorithm>
 #include <boost/shared_ptr.hpp>
-#include "Weapon.h"
+#include "Weapons.h"
 #include "Actor.h"
-class Team;
+
 class Boss :public Actor
 {
 public:
+    Boss() {}
     Boss(float x, float y) : Actor(x, y) {}
     Boss(Point2D p) : Actor(p) {}
-    Boss() {}
-    Boss(size_t w, size_t h) 
+    Boss(size_t w, size_t h)
     {
         SetPlayableArea(w, h);
     }
@@ -20,7 +21,12 @@ public:
     double CurrentDamageCooldown;
     float Speed; // pixel per milisecond (unscale)
     std::vector<boost::shared_ptr<Weapon>> Weapons;
-    Team* team;
+
+    void SetPlayableArea(size_t w, size_t h)
+    {
+        playableWidth = w;
+        playableHeight = h;
+    }
 
     void UpdateCooldown(double elapsedGameTime)
     {
@@ -31,15 +37,20 @@ public:
         CurrentDamageCooldown = CurrentDamageCooldown + elapsedGameTime;
     }
 
+    void getDamage(size_t damage)
+    {
+        if (CurrentDamageCooldown >= DamageCooldown)
+        {
+            CurrentHealth = std::max(CurrentHealth - damage, (size_t)0);
+            CurrentDamageCooldown = 0;
+        }
+        actionWhenGetDamaged(damage);
+    }
+
     virtual void move(sf::Uint32 elapsed) = 0;
     virtual void attack() = 0;
-    virtual void getDamage(size_t damage) = 0;
-
-    void SetPlayableArea(size_t w, size_t h)
-    {
-        playableWidth = w;
-        playableHeight = h;
-    }
+    virtual void actionWhenGetDamaged(size_t damage) = 0;
+    virtual void setupWeapons() = 0;
 protected:
     size_t playableWidth, playableHeight;
 };
