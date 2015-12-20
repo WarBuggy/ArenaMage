@@ -2,6 +2,7 @@
 #define WEAPONBLASTER_H_
 
 #include "Weapon.h"
+//#include "ServerSFML.h"
 
 class WeaponBlaster : public Weapon
 {
@@ -27,7 +28,7 @@ public:
         pro.SpeedY = (float)sin(angle) * pro.Speed;
         pro.SpeedX = (float)cos(angle) * pro.Speed;
         pro.Rotation = (float)angle;
-        //ScreenPlay.CurrentProjectiles.Add(pro);
+        //ServerSFML::Projectiles.push_back(boost::make_shared<ProjectileBlaster>(pro));
     }
 
 

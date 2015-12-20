@@ -21,6 +21,7 @@ public:
     static bool StopServer;
     void run();
     void stop();
+	static std::vector<boost::shared_ptr<Projectile>> Projectiles;
 private:
     bool IsServerOnline = false;
     void send(sf::Packet p, Endpoint remoteEndpoint);
@@ -38,6 +39,7 @@ private:
     void doGameUpdate(sf::Uint32 elapsed);
     void sendDataToClients();
     static const size_t FramePerSecond = 30;
+	sf::Clock clock;
 };
 #endif
 
