@@ -10,7 +10,7 @@ Packet::Packet(sf::Packet receivedPacket)
 
 void Packet::CreateAuthenPacket(std::string pass, std::string name)
 {
-    p << (uint8_t)DataID::LogInRequestClient;
+    p << (sf::Uint8)DataID::LogInRequestClient;
     // authen packet format
     // Password length + password + name length + name
     p << (uint8_t)pass.size();
@@ -22,5 +22,5 @@ void Packet::CreateAuthenPacket(std::string pass, std::string name)
 void Packet::CreateDataIDOnly(DataID id)
 {
     ID = id;
-    p << (uint8_t)id;
+    p << (sf::Uint8)id;
 }

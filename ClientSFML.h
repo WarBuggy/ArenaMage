@@ -3,11 +3,13 @@
 #include <iostream>
 #include <sstream>
 #include <mutex>
+#include <boost/make_shared.hpp>
 #include "SFML/Graphics.hpp"
 #include "Actor.h"
 #include "Packet.h"
 #include "Endpoint.h"
 #include "Arena.h"
+#include "Team.h"
 
 class ClientSFML
 {
@@ -26,6 +28,7 @@ public:
     STATE State;
     Arena arena;
     void DrawActors(sf::RenderWindow & window, float offsetX, float offsetY);
+	static std::vector<boost::shared_ptr<Projectile>> ClientProjectiles;
 private:
     void send(Packet p);
     void ProcessReceivedPacket(Packet p);
@@ -42,6 +45,7 @@ private:
     std::map<uint8_t, bool> packageReceived;
     void Log(std::string message, bool isError = false);
     void ProcessActorInfoPacket(Packet p);
+	void ProcessProjectileInfoPacket(Packet p);
     std::vector<Actor> Actors;
 };
 #endif

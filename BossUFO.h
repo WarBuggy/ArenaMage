@@ -11,15 +11,15 @@ public:
         CurrentHealth = MaxHealth;
         height = 15;
         width = 35;
-        Speed = (float)0.2;
+        Speed = (float)0.045;
         setupWeapons();
     }
 
     void move(sf::Uint32 elapsed)
     {
-        Pos.X = std::min(Pos.X, (((float)playableWidth - width))*SCALE);
+        Pos.X = std::min(Pos.X, (((float)playableWidth - width)));
         Pos.X = std::max(Pos.X, 0.f);
-        if (Pos.X == (((float)playableWidth - width))*SCALE || Pos.X == 0.f)
+        if (Pos.X == (((float)playableWidth - width)) || Pos.X == 0.f)
         {
             Speed = (-1) * Speed;
         }
@@ -31,7 +31,7 @@ public:
         if (!IsAlive) { return; }
         for (std::vector<boost::shared_ptr<Weapon>>::size_type i = 0; i != Weapons.size(); i++)
         {
-            Weapons.at(i)->Fire((Pos.X + width / 3 * i)*SCALE, (Pos.Y + height / 2)*SCALE, 200, 200);
+            Weapons.at(i)->Fire(Pos.X + width / 3 * i, Pos.Y + height / 2, 200, 200);
         }
     }
 

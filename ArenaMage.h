@@ -8,7 +8,7 @@
 class ArenaMage
 {
 public:
-    static std::vector<ScreenResolution> SupportedScreenResolutions;
+	static std::vector<ScreenResolution> SupportedScreenResolutions;
 private:
 };
 

@@ -10,7 +10,7 @@
 #include "Team.h"
 #include "ActorID.h"
 #include "ActorType.h"
-#include "BossUFO.h"
+#include "Bosses.h"
 
 class ServerSFML
 {
@@ -21,7 +21,6 @@ public:
     static bool StopServer;
     void run();
     void stop();
-	static std::vector<boost::shared_ptr<Projectile>> Projectiles;
 private:
     bool IsServerOnline = false;
     void send(sf::Packet p, Endpoint remoteEndpoint);

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cmath>
+#include "boost/math/constants/constants.hpp"
 #include<SFML/Graphics/Color.hpp>
 
 class Team;
@@ -21,6 +22,7 @@ public:
     float TimeActive = 0, timeSinceFire;// in miliseconds, default 0, no active timer. Active timer used for weapon like flame thrower
     Team* team;
     sf::Color Color;
+	static std::vector<boost::shared_ptr<Projectile>> Projectiles;
 
     bool CheckIntersect(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y, float p3_x, float p3_y)
     {
@@ -59,8 +61,9 @@ public:
         return Point2D{ topX, topY };
     }
 
-    virtual void Move() = 0;
+    virtual void Move(sf::Uint32 elapsed) = 0;
     virtual void DetectCollisionWithArenaObject(Arena arena) = 0;
     virtual void DetectCollisionWitObject(Object object) = 0;
+	virtual void CreateDataForClients(sf::Packet &p) = 0;
 };
 #endif

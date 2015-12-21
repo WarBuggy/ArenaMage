@@ -1,7 +1,7 @@
 #include "ServerSFML.h"
 sf::UdpSocket ServerSFML::socket_;
 bool ServerSFML::StopServer;
-std::vector<boost::shared_ptr<Projectile>> ServerSFML::Projectiles;
+std::vector<boost::shared_ptr<Projectile>> Projectile::Projectiles;
 extern std::mutex mutex;
 
 ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint32_t port)
@@ -9,7 +9,7 @@ ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint3
 	IsServerOnline = false;
 	teamA = Team("Team A");
 	teamB = Team("Team B");
-	Projectiles.clear();
+	//Projectiles.clear();
 	playableWidth = 160;
 	playableHeight = 80;
 	jumpHeight = 20;
@@ -53,10 +53,12 @@ void ServerSFML::run()
 	Log("Server listens for request...");
 	double overAmount = 0;
 	double msPerCycle = 1000 / FramePerSecond;
-	//size_t over = 0;
-	//double overAmountTest = 0;
-	//sf::Clock overClock;
-	//overClock.restart();
+
+	size_t over = 0;
+	double overAmountTest = 0;
+	sf::Clock overClock;
+	overClock.restart();
+
 	while (StopServer == false)
 	{
 		sf::Time elapsed = clock.restart();
@@ -65,18 +67,18 @@ void ServerSFML::run()
 		{
 			overAmount = 0;
 		}
-		//else
-		//{
-		//	overAmountTest = overAmountTest + overAmount;
-		//	over++;
-		//	if (over > 100)
-		//	{
-		//		std::cout << overAmountTest << ", "<< overClock.getElapsedTime().asMilliseconds() << std::endl;
-		//		over = 0;
-		//		overAmountTest = 0;
-		//		overClock.restart();
-		//	}
-		//}
+		else
+		{
+			overAmountTest = overAmountTest + overAmount;
+			over++;
+			if (over > 100)
+			{
+				std::cout << overAmountTest << ", " << overClock.getElapsedTime().asMilliseconds() << ", " << Projectile::Projectiles.size() << std::endl;
+				over = 0;
+				overAmountTest = 0;
+				overClock.restart();
+			}
+		}
 
 		doGameUpdate(elapsed.asMilliseconds());
 
@@ -255,7 +257,7 @@ void ServerSFML::ProcessRequestArena(Endpoint ep)
 	}
 	uint8_t packageNum = 1, objectNum = 0;
 	sf::Packet p;
-	p << (uint8_t)DataID::ArenaInfo << (sf::Uint16)arena.PlayableWidth << (sf::Uint16)arena.PlayableHeight << (sf::Uint16)arena.JumpHeight << (sf::Uint16)objectTotal;
+	p << (sf::Uint8)DataID::ArenaInfo << (sf::Uint16)arena.PlayableWidth << (sf::Uint16)arena.PlayableHeight << (sf::Uint16)arena.JumpHeight << (sf::Uint16)objectTotal;
 	send(p, ep);
 	for (std::map<Point2D, ObjectType>::iterator it = arena.ArenaObjects.begin(); it != arena.ArenaObjects.end(); ++it)
 	{
@@ -264,7 +266,7 @@ void ServerSFML::ProcessRequestArena(Endpoint ep)
 			p = sf::Packet();
 			// Format
 			// DataID + packageNum + total package num + object num + point1.X + point1.Y + type + point2.X + point2.Y + type + ......
-			p << (uint8_t)DataID::ArenaObjects << packageNum << totalPackageNeeded;
+			p << (sf::Uint8)DataID::ArenaObjects << packageNum << totalPackageNeeded;
 			if (packageNum == totalPackageNeeded)
 			{
 				p << (uint8_t)(objectTotal - (packageNum*Arena::OBJECT_SENT_PER_PACKAGE));
@@ -275,7 +277,7 @@ void ServerSFML::ProcessRequestArena(Endpoint ep)
 			}
 		}
 
-		p << it->first.X << it->first.Y << (uint8_t)it->second;
+		p << it->first.X << it->first.Y << (sf::Uint8)it->second;
 
 		objectNum++;
 		if (objectNum == Arena::OBJECT_SENT_PER_PACKAGE)
@@ -309,21 +311,41 @@ void ServerSFML::doGameUpdate(sf::Uint32 elapsed)
 {
 	teamA.Members.at(0)->move(elapsed);
 	teamA.Members.at(0)->attack();
+	for (std::vector<int>::size_type i = 0; i != Projectile::Projectiles.size(); i++)
+	{
+		Projectile::Projectiles.at(i)->Move(elapsed);
+	}
 }
 
 void ServerSFML::sendDataToClients()
 {
-	sf::Packet p;
-	p << (sf::Uint8)DataID::ActorInfo;
-	p << (sf::Uint8) 1;
-	p << (sf::Uint8) ActorID::BOSS_UFO;
-	p << (sf::Uint16) teamA.Members.at(0)->width << (sf::Uint16) teamA.Members.at(0)->height;
-	p << (float)teamA.Members.at(0)->Pos.X << (float)teamA.Members.at(0)->Pos.Y;
+	sf::Packet actorsPacket, projectilesPacket;
+	// Prepare actors packet
+	actorsPacket << (sf::Uint8)DataID::ActorInfo;
+	actorsPacket << (sf::Uint8) 1; // number of actor
+	actorsPacket << (sf::Uint8) ActorID::BOSS_UFO;
+	actorsPacket << (sf::Uint16) teamA.Members.at(0)->width << (sf::Uint16) teamA.Members.at(0)->height;
+	actorsPacket << (float)teamA.Members.at(0)->Pos.X << (float)teamA.Members.at(0)->Pos.Y;
+	// Prepare projectiles packet
+	sf::Uint8 projectilesNum = (sf::Uint8)Projectile::Projectiles.size();
+	if (projectilesNum > 0)
+	{
+		projectilesPacket << (sf::Uint8) DataID::ProjectileInfo << projectilesNum;
+		for (std::vector<int>::size_type i = 0; i != Projectile::Projectiles.size(); i++)
+		{
+			Projectile::Projectiles.at(i)->CreateDataForClients(projectilesPacket);
+		}
+	}
+	// send to all clients who already authented
 	for (std::map<Endpoint, ActorType>::iterator it = CurrentPlayers.begin(); it != CurrentPlayers.end(); ++it)
 	{
 		if (it->second != ActorType::UNKNOWN)
 		{
-			send(p, it->first);
+			send(actorsPacket, it->first);
+			if (projectilesNum > 0)
+			{
+				send(projectilesPacket, it->first);
+			}
 		}
 	}
 }

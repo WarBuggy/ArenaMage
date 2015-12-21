@@ -3,7 +3,9 @@
 #ifndef DATAID_H_
 #define DATAID_H_
 
-enum DataID : uint8_t {
+#include "SFML/System.hpp"
+
+enum DataID : sf::Uint8 {
     Null,
     LogInRequestClient,
     LogInServerAccept,
@@ -15,6 +17,7 @@ enum DataID : uint8_t {
     ArenaObjects,
     ArenaInfo,
     ArenaReceivedCompleted,
-    ActorInfo
+    ActorInfo,
+	ProjectileInfo
 };
 #endif
