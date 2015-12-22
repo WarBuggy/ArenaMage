@@ -62,7 +62,7 @@ public:
     }
 
     virtual void Move(sf::Uint32 elapsed) = 0;
-    virtual void DetectCollisionWithArenaObject(Arena arena) = 0;
+    virtual void DetectCollisionWithArenaObject(Arena &arena) = 0;
     virtual void DetectCollisionWitObject(Object object) = 0;
 	virtual void CreateDataForClients(sf::Packet &p) = 0;
 };

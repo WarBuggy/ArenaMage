@@ -15,7 +15,7 @@ public:
 		Init();
 		Name = "Blaster lazer";
 		Color = sf::Color(255, 0, 0);
-		Speed = (float)0.02;
+		Speed = (float)0.3;
 		width = 8;
 		height = 1;
 		Rotation = rotation;
@@ -38,11 +38,21 @@ public:
 		Pos.Y = Pos.Y + SpeedY*elapsed;
 	}
 
-	void DetectCollisionWithArenaObject(Arena arena) {}
+	void DetectCollisionWithArenaObject(Arena &arena)
+	{
+		if (Pos.X < 0 || Pos.X > arena.PlayableWidth || Pos.Y < 0 || Pos.Y > arena.PlayableHeight)
+		{
+			ToBeRemove = true;
+		}
+		else
+		{
+
+		}
+	}
 	void DetectCollisionWitObject(Object object) {}
 	void CreateDataForClients(sf::Packet &p)
 	{
-		p << (sf::Uint8) ObjectType::PROJECTILE_BLASTER << (sf::Uint16) Pos.X << (sf::Uint16) Pos.Y << (float)Rotation;
+		p << (sf::Uint8) ObjectType::PROJECTILE_BLASTER << Pos.X << Pos.Y << Rotation;
 	}
 };
 

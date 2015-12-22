@@ -39,6 +39,7 @@ private:
     void sendDataToClients();
     static const size_t FramePerSecond = 30;
 	sf::Clock clock;
+	void removeProjectiles();
 };
 #endif
 

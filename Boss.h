@@ -28,7 +28,7 @@ public:
         playableHeight = h;
     }
 
-    void UpdateCooldown(double elapsedGameTime)
+    void UpdateCooldown(sf::Uint32 elapsedGameTime)
     {
         for (std::vector<boost::shared_ptr<Weapon>>::size_type i = 0; i != Weapons.size(); i++)
         {

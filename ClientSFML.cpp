@@ -290,23 +290,50 @@ void ClientSFML::ProcessProjectileInfoPacket(Packet p)
 	for (sf::Uint8 i = 0; i < proNum; i++)
 	{
 		sf::Uint8 proID = 0;
-		float x = 0, y = 0, rotation = 0;
-		bool success = p.p >> proID >> x >> y >> rotation;
+		bool success = p.p >> proID;
 		if (success)
 		{
 			if (proID == ObjectType::PROJECTILE_BLASTER)
 			{
-				ProjectileBlaster pro(x, y, rotation);
-				ClientProjectiles.push_back(boost::make_shared<ProjectileBlaster>(pro));
+				float x = 0, y = 0, rotation = 0;
+				success = p.p >> x >> y >> rotation;
+				if (success)
+				{
+					ProjectileBlaster pro(x, y, rotation);
+					ClientProjectiles.push_back(boost::make_shared<ProjectileBlaster>(pro));
+				}
+				else
+				{
+					Log("Error in extracting blaster lazer data.", true);
+				}
 			}
+		}
+		else
+		{
+			Log("Error in extracting projectile ID.", true);
 		}
 	}
 	lock.unlock();
 }
 
-void ClientSFML::DrawActors(sf::RenderWindow & window, float offsetX, float offsetY)
+void ClientSFML::Draw(sf::RenderWindow & window, float offsetX, float offsetY)
 {
 	std::unique_lock<std::mutex> lock(mutex);
+	// draw projectiles first
+	if (ClientProjectiles.size() > 0)
+	{
+		size_t scale = ClientProjectiles.at(0)->SCALE;
+		for (std::vector<int>::size_type i = 0; i != ClientProjectiles.size(); i++)
+		{
+			sf::RectangleShape rec;
+			rec.setSize(sf::Vector2f((float)ClientProjectiles.at(i)->width*scale, (float)ClientProjectiles.at(0)->height*scale));
+			rec.setPosition(ClientProjectiles.at(i)->Pos.X * scale + offsetX, ClientProjectiles.at(i)->Pos.Y * scale + offsetY);
+			rec.setFillColor(ClientProjectiles.at(i)->Color);
+			rec.setRotation((ClientProjectiles.at(i)->Rotation * 180 / boost::math::constants::pi<float>()));
+			window.draw(rec);
+		}
+	}
+	// draw actors
 	for (std::vector<Actor>::iterator it = Actors.begin(); it != Actors.end(); ++it)
 	{
 		sf::RectangleShape rec;
@@ -318,18 +345,12 @@ void ClientSFML::DrawActors(sf::RenderWindow & window, float offsetX, float offs
 		}
 		window.draw(rec);
 	}
-	if (ClientProjectiles.size() > 0)
-	{
-		size_t scale = ClientProjectiles.at(0)->SCALE;
-		for (std::vector<int>::size_type i = 0; i != ClientProjectiles.size(); i++)
-		{
-			sf::RectangleShape rec;
-			rec.setSize(sf::Vector2f((float)ClientProjectiles.at(i)->width*scale, (float)ClientProjectiles.at(0)->height*scale));
-			rec.setPosition(ClientProjectiles.at(i)->Pos.X * scale + offsetX, ClientProjectiles.at(i)->Pos.Y * scale + offsetY);
-			rec.setFillColor(ClientProjectiles.at(i)->Color);
-			rec.setRotation(ClientProjectiles.at(i)->Rotation);
-			window.draw(rec);
-		}
-	}
+	//Test target
+	//sf::RectangleShape rec;
+	//rec.setSize(sf::Vector2f(10, 10));
+	//rec.setPosition(50*5 + offsetX, 70*5 + offsetY);
+	//rec.setFillColor(sf::Color(255, 255, 50));
+	//window.draw(rec);
+	//End of test target
 	lock.unlock();
 }

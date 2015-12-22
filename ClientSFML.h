@@ -27,7 +27,7 @@ public:
     };
     STATE State;
     Arena arena;
-    void DrawActors(sf::RenderWindow & window, float offsetX, float offsetY);
+    void Draw(sf::RenderWindow & window, float offsetX, float offsetY);
 	static std::vector<boost::shared_ptr<Projectile>> ClientProjectiles;
 private:
     void send(Packet p);

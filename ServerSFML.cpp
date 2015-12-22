@@ -9,7 +9,7 @@ ServerSFML::ServerSFML(std::string pass, size_t serverCap, size_t teamCap, uint3
 	IsServerOnline = false;
 	teamA = Team("Team A");
 	teamB = Team("Team B");
-	//Projectiles.clear();
+	Projectile::Projectiles.clear();
 	playableWidth = 160;
 	playableHeight = 80;
 	jumpHeight = 20;
@@ -54,10 +54,10 @@ void ServerSFML::run()
 	double overAmount = 0;
 	double msPerCycle = 1000 / FramePerSecond;
 
-	size_t over = 0;
-	double overAmountTest = 0;
-	sf::Clock overClock;
-	overClock.restart();
+	//size_t over = 0;
+	//double overAmountTest = 0;
+	//sf::Clock overClock;
+	//overClock.restart();
 
 	while (StopServer == false)
 	{
@@ -67,18 +67,18 @@ void ServerSFML::run()
 		{
 			overAmount = 0;
 		}
-		else
-		{
-			overAmountTest = overAmountTest + overAmount;
-			over++;
-			if (over > 100)
-			{
-				std::cout << overAmountTest << ", " << overClock.getElapsedTime().asMilliseconds() << ", " << Projectile::Projectiles.size() << std::endl;
-				over = 0;
-				overAmountTest = 0;
-				overClock.restart();
-			}
-		}
+		//else
+		//{
+		//	overAmountTest = overAmountTest + overAmount;
+		//	over++;
+		//	if (over > 100)
+		//	{
+		//		std::cout << overAmountTest << ", " << overClock.getElapsedTime().asMilliseconds() << ", " << Projectile::Projectiles.size() << std::endl;
+		//		over = 0;
+		//		overAmountTest = 0;
+		//		overClock.restart();
+		//	}
+		//}
 
 		doGameUpdate(elapsed.asMilliseconds());
 
@@ -309,12 +309,16 @@ void ServerSFML::Log(std::string message, bool isError)
 
 void ServerSFML::doGameUpdate(sf::Uint32 elapsed)
 {
+	teamA.Members.at(0)->UpdateCooldown(elapsed);
 	teamA.Members.at(0)->move(elapsed);
 	teamA.Members.at(0)->attack();
+
 	for (std::vector<int>::size_type i = 0; i != Projectile::Projectiles.size(); i++)
 	{
 		Projectile::Projectiles.at(i)->Move(elapsed);
+		Projectile::Projectiles.at(i)->DetectCollisionWithArenaObject(arena);
 	}
+	removeProjectiles();
 }
 
 void ServerSFML::sendDataToClients()
@@ -328,7 +332,7 @@ void ServerSFML::sendDataToClients()
 	actorsPacket << (float)teamA.Members.at(0)->Pos.X << (float)teamA.Members.at(0)->Pos.Y;
 	// Prepare projectiles packet
 	sf::Uint8 projectilesNum = (sf::Uint8)Projectile::Projectiles.size();
-	if (projectilesNum > 0)
+	if (projectilesNum > 0 && CurrentPlayers.size() > 0)
 	{
 		projectilesPacket << (sf::Uint8) DataID::ProjectileInfo << projectilesNum;
 		for (std::vector<int>::size_type i = 0; i != Projectile::Projectiles.size(); i++)
@@ -345,6 +349,18 @@ void ServerSFML::sendDataToClients()
 			if (projectilesNum > 0)
 			{
 				send(projectilesPacket, it->first);
+			}
+		}
+	}
+}
+
+void ServerSFML::removeProjectiles()
+{
+	if (Projectile::Projectiles.empty() == false) {
+		for (int i = Projectile::Projectiles.size() - 1; i >= 0; i--) {
+			if (Projectile::Projectiles.at(i)->ToBeRemove) 
+			{
+				Projectile::Projectiles.erase(Projectile::Projectiles.begin() + i);
 			}
 		}
 	}
