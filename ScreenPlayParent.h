@@ -18,7 +18,6 @@ private:
     float arenaHeight;
     float unplayableHeight;
     float unplayableWidth;
-
 };
 
 #endif

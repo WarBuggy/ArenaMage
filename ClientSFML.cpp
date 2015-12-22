@@ -2,7 +2,7 @@
 sf::UdpSocket ClientSFML::socket_;
 bool ClientSFML::StopClient;
 extern std::mutex mutex;
-std::vector<boost::shared_ptr<Projectile>> ClientSFML::ClientProjectiles;
+sf::Image ClientSFML::SpriteSheet;
 
 ClientSFML::ClientSFML(std::string pass, std::string name, std::string ip, size_t server_port)
 {
@@ -22,6 +22,7 @@ ClientSFML::ClientSFML(std::string pass, std::string name, std::string ip, size_
 			socket_.setBlocking(false);
 			serverPort = server_port;
 			serverIP = sf::IpAddress(ip);
+			LoadTextures();
 		}
 		else if (s == sf::Socket::Error)
 		{
@@ -316,6 +317,16 @@ void ClientSFML::ProcessProjectileInfoPacket(Packet p)
 	lock.unlock();
 }
 
+void ClientSFML::LoadTextures()
+{
+	bool success = SpriteSheet.loadFromFile("Resources/blasterlaser.png");
+	if (!success)
+	{
+		Log("Error in loading textures. Program will now terminate.");
+		exit(-1);
+	}
+}
+
 void ClientSFML::Draw(sf::RenderWindow & window, float offsetX, float offsetY)
 {
 	std::unique_lock<std::mutex> lock(mutex);
@@ -325,12 +336,20 @@ void ClientSFML::Draw(sf::RenderWindow & window, float offsetX, float offsetY)
 		size_t scale = ClientProjectiles.at(0)->SCALE;
 		for (std::vector<int>::size_type i = 0; i != ClientProjectiles.size(); i++)
 		{
-			sf::RectangleShape rec;
-			rec.setSize(sf::Vector2f((float)ClientProjectiles.at(i)->width*scale, (float)ClientProjectiles.at(0)->height*scale));
-			rec.setPosition(ClientProjectiles.at(i)->Pos.X * scale + offsetX, ClientProjectiles.at(i)->Pos.Y * scale + offsetY);
-			rec.setFillColor(ClientProjectiles.at(i)->Color);
-			rec.setRotation((ClientProjectiles.at(i)->Rotation * 180 / boost::math::constants::pi<float>()));
-			window.draw(rec);
+			sf::Texture texture;
+			sf::IntRect rec = ClientProjectiles.at(i)->GetTextureCoord();
+			bool success = texture.loadFromImage(SpriteSheet, rec);
+			if (success)
+			{
+				texture.setSmooth(true);
+				texture.setRepeated(true);
+				sf::Sprite sprite;
+				sprite.setTexture(texture);
+				sprite.setPosition(ClientProjectiles.at(i)->Pos.X * scale + offsetX, ClientProjectiles.at(i)->Pos.Y * scale + offsetY);
+				sprite.setRotation(ClientProjectiles.at(i)->Rotation * 180 / boost::math::constants::pi<float>());
+				sprite.setScale(sf::Vector2f((float)ClientProjectiles.at(i)->width*scale / rec.width, (float)ClientProjectiles.at(0)->height*scale / rec.height));
+				window.draw(sprite);
+			}
 		}
 	}
 	// draw actors

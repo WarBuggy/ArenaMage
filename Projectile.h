@@ -4,7 +4,8 @@
 #include <string>
 #include <cmath>
 #include "boost/math/constants/constants.hpp"
-#include<SFML/Graphics/Color.hpp>
+#include "SFML/Graphics/Color.hpp"
+#include "SFML/Graphics/Rect.hpp"
 
 class Team;
 class Projectile :public Object
@@ -65,5 +66,6 @@ public:
     virtual void DetectCollisionWithArenaObject(Arena &arena) = 0;
     virtual void DetectCollisionWitObject(Object object) = 0;
 	virtual void CreateDataForClients(sf::Packet &p) = 0;
+	virtual sf::IntRect GetTextureCoord() = 0;
 };
 #endif

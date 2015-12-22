@@ -28,7 +28,6 @@ public:
     STATE State;
     Arena arena;
     void Draw(sf::RenderWindow & window, float offsetX, float offsetY);
-	static std::vector<boost::shared_ptr<Projectile>> ClientProjectiles;
 private:
     void send(Packet p);
     void ProcessReceivedPacket(Packet p);
@@ -47,5 +46,8 @@ private:
     void ProcessActorInfoPacket(Packet p);
 	void ProcessProjectileInfoPacket(Packet p);
     std::vector<Actor> Actors;
+	void LoadTextures();
+	static sf::Image SpriteSheet;
+	std::vector<boost::shared_ptr<Projectile>> ClientProjectiles;
 };
 #endif

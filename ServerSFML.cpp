@@ -309,6 +309,7 @@ void ServerSFML::Log(std::string message, bool isError)
 
 void ServerSFML::doGameUpdate(sf::Uint32 elapsed)
 {
+	std::unique_lock<std::mutex> lock(mutex);
 	teamA.Members.at(0)->UpdateCooldown(elapsed);
 	teamA.Members.at(0)->move(elapsed);
 	teamA.Members.at(0)->attack();
@@ -319,10 +320,12 @@ void ServerSFML::doGameUpdate(sf::Uint32 elapsed)
 		Projectile::Projectiles.at(i)->DetectCollisionWithArenaObject(arena);
 	}
 	removeProjectiles();
+	lock.unlock();
 }
 
 void ServerSFML::sendDataToClients()
 {
+	std::unique_lock<std::mutex> lock(mutex);
 	sf::Packet actorsPacket, projectilesPacket;
 	// Prepare actors packet
 	actorsPacket << (sf::Uint8)DataID::ActorInfo;
@@ -352,6 +355,7 @@ void ServerSFML::sendDataToClients()
 			}
 		}
 	}
+	lock.unlock();
 }
 
 void ServerSFML::removeProjectiles()

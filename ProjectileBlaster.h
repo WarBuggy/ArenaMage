@@ -54,6 +54,12 @@ public:
 	{
 		p << (sf::Uint8) ObjectType::PROJECTILE_BLASTER << Pos.X << Pos.Y << Rotation;
 	}
+
+	sf::IntRect GetTextureCoord()
+	{
+		sf::IntRect rec(0, 0, 1, 10);
+		return rec;
+	}
 };
 
 
