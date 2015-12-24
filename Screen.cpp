@@ -78,7 +78,7 @@ ScreenCode Screen::Run(sf::RenderWindow & window)
         }
         else if (Command == ServerClientCommand::StartClient)
         {
-            //localClient = ClientSFML("1111", "Buggy", "93.91.0.247", 7777);
+            //localClient = ClientSFML("1111", "Buggy", "93.91.0.247", 3478);
             localClient = ClientSFML("1111", "Buggy", "127.0.0.1", 7777);
             boost::thread(boost::bind(&ClientSFML::run, boost::ref(localClient)));
             Command = ServerClientCommand::Nothing;

@@ -3,6 +3,7 @@
 
 enum ObjectType : sf::Uint8
 {
+	NOT_DEFINE,
     ARENA_PLATFORM,
     ARENA_BLOCK,
 	PROJECTILE_BLASTER

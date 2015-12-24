@@ -20,7 +20,7 @@ public:
         if (CurrentCooldown >= Cooldown)
         {
             FireProjectile(startX, startY, desX, desY);
-			CurrentCooldown = 0;
+			CurrentCooldown = CurrentCooldown - Cooldown;
         }
     }
     void Reset()
