@@ -55,13 +55,13 @@ public:
 		}
 		else
 		{
-			Point2D projected = GetProjectedMoveVector();
+			Point2D projected = GetProjectedShape();
 			float topX = projected.X;
 			float topY = projected.Y;
-			float X = std::min(topX, Pos.X);
-			float Y = std::min(topY, Pos.Y);
-			float width = abs(topX - Pos.X);
-			float height = abs(topY - Pos.Y);
+			float X = std::min(topX, PrevX);
+			float Y = std::min(topY, PrevY);
+			float width = abs(topX - PrevX);
+			float height = abs(topY - PrevY);
 
 			std::vector<Point2D> points = arena.GetAllObjectPositionsInRec(X, Y, width, height);
 			if (points.size() < 1) { return; }
@@ -74,17 +74,12 @@ public:
 				{
 					IsPassable = false;
 				}
-				if (!IsPassable && CheckIntersect(Pos.X, Pos.Y, topX, topY, it->X, it->Y, it->X + objectWidth, it->Y))
+				if (!IsPassable && CheckIntersect(PrevX, PrevY, topX, topY, it->X, it->Y, it->X + objectWidth, it->Y))
 				{
 					//ScreenPlay.AddImpact(new Vector2(obj.PosX, obj.PosY));
 					ToBeRemove = true;
 					break;
 				}
-				//else if (!IsPassable && CheckIntersect(Pos.X, Pos.Y, PrevX, PrevY, it->X, it->Y, it->X + objectWidth, it->Y))
-				//{
-				//	ToBeRemove = true;
-				//	break;
-				//}
 			}
 		}
 	}

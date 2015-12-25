@@ -49,14 +49,15 @@ public:
 		return false; // No collision
 	}
 
-	Point2D GetProjectedMoveVector()
+	Point2D GetProjectedMove()
 	{
-		float topX = Pos.X + SpeedX * 33;
-		float topY = Pos.Y + SpeedY * 33;
+		float idealElapsedTime = 33;
+		float topX = Pos.X + SpeedX * idealElapsedTime;
+		float topY = Pos.Y + SpeedY * idealElapsedTime;
 		return Point2D{ topX, topY };
 	}
 
-	Point2D GetProjectedShapeVector()
+	Point2D GetProjectedShape()
 	{
 		float topX = Pos.X + cos(Rotation) * width;
 		float topY = Pos.Y + sin(Rotation) * width;

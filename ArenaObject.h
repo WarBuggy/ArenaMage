@@ -14,8 +14,6 @@ public:
     bool IsHeightScalable = false;
     bool IsStandable = true;
     bool IsPassable = true;
-    sf::Texture texture;
-    sf::Sprite sprite;
 protected:
 private:
     bool operator ==(const ArenaObject &obj) const

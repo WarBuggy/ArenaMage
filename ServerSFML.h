@@ -21,6 +21,7 @@ public:
     static bool StopServer;
     void run();
     void stop();
+	static const size_t FramePerSecond = 30;
 private:
     bool IsServerOnline = false;
     void send(sf::Packet p, Endpoint remoteEndpoint);
@@ -37,7 +38,6 @@ private:
     size_t playableWidth, playableHeight, jumpHeight;
     void doGameUpdate(sf::Uint32 elapsed);
     void sendDataToClients();
-    static const size_t FramePerSecond = 30;
 	sf::Clock clock;
 	void removeProjectiles();
 };
