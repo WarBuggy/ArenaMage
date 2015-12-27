@@ -10,7 +10,7 @@ public:
 	{
 		Name = "Blaster";
 		Desc = "Fast speed, reliable damage. Your first choice on the path to fame.";
-		Cooldown = 300;
+		Cooldown = 600;
 	}
 
 	WeaponBlaster()

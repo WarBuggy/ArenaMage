@@ -3,6 +3,8 @@
 std::vector<ScreenResolution> ArenaMage::SupportedScreenResolutions(2);
 sf::Font Choice::DEFAULT_FONT;
 size_t Object::SCALE;
+sf::Texture Screen::SpriteSheet;
+
 
 std::random_device rd;     // only used once to initialise (seed) engine
 std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
@@ -27,10 +29,22 @@ void SetupFont()
     }
 }
 
+void LoadTextures()
+{
+	bool success = Screen::SpriteSheet.loadFromFile("Resources/spritesheet.png");
+	if (!success)
+	{
+		std::cerr << "Error in loading textures. Program will now terminate." << std::endl;
+		exit(-1);
+	}
+}
+
+
 void init()
 {
     SetupSupportedScreenResolution();
     SetupFont();
+	LoadTextures();
 }
 
 ScreenCode HandleScreenCode(ScreenCode code, sf::RenderWindow & window)

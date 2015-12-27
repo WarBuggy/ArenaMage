@@ -13,11 +13,6 @@ public:
 	ProjectileBlaster(float x, float y, float rotation) : Projectile(x, y)
 	{
 		Init();
-		Name = "Blaster lazer";
-		Color = sf::Color(255, 0, 0);
-		Speed = (float)0.3;
-		width = 8;
-		height = 1;
 		Rotation = rotation;
 		SpeedY = sin(Rotation)*Speed;
 		SpeedX = cos(Rotation)*Speed;
@@ -26,9 +21,8 @@ public:
 	void Init()
 	{
 		Name = "Blaster lazer";
-		Color = sf::Color(255, 0, 0);
-		Speed = (float)0.08;
-		width = 8;
+		Speed = (float)0.09;
+		width = 6;
 		height = 1;
 		PrevX = Pos.X;
 		PrevY = Pos.Y;
@@ -44,11 +38,6 @@ public:
 
 	void DetectCollisionWithArenaObject(Arena &arena)
 	{
-		if ((size_t)(Pos.Y / 1) == 20)// || (size_t)(Pos.Y / 1) == 40 || (size_t)(Pos.Y / 1) == 60)
-		{
-			size_t i = (size_t)ToBeRemove;
-			i++;
-		}
 		if (Pos.X < 0 || Pos.X > arena.PlayableWidth || Pos.Y < 0 || Pos.Y > arena.PlayableHeight)
 		{
 			ToBeRemove = true;

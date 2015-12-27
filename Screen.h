@@ -33,6 +33,7 @@ public:
         CloseClient
     };
     static ServerClientCommand Command;
+	static sf::Texture Screen::SpriteSheet;
 protected:
     static ServerSFML server;
     static ClientSFML localClient;
